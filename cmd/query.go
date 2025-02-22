@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/eiannone/keyboard"
 	"github.com/spf13/cobra"
 )
 
@@ -110,38 +111,7 @@ Example: prop-filter-app query -p 10 -n 2`,
 			return
 		}
 
-		lowerLimit := (pageNumber - 1) * pageSize
-		upperLimit := lowerLimit + pageSize
-		if upperLimit > lenData {
-			upperLimit = lenData
-		}
-
-		// DEBUG info
-		fmt.Println("page size:", pageSize, "page number:", pageNumber, "max page:", maxPage)
-		fmt.Println("upperLimit:", upperLimit, "lowerLimit:", lowerLimit)
-		fmt.Println()
-		// DEBUG info end
-
-		tw := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-		fmt.Fprintf(tw, "Description\tPrice\tSquare Footage\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
-		fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
-
-		for i := lowerLimit; i < upperLimit; i++ {
-			p := propertiesData[i]
-
-			ammenities := ""
-			for k, v := range p.ammenities {
-				if v {
-					ammenities += k + ", "
-				}
-			}
-			ammenities = strings.TrimSuffix(ammenities, ", ")
-
-			fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", p.description, p.price,
-				p.squareFootage, p.rooms, p.bathrooms, p.lighting, p.location[0], p.location[1], ammenities)
-		}
-
-		tw.Flush()
+		startQueryLoop(pageNumber, pageSize, maxPage, propertiesData)
 	},
 }
 
@@ -150,4 +120,84 @@ func init() {
 
 	queryCmd.Flags().IntP("page-size", "p", 20, "page size, value of 0 will retrieve all filtered entries")
 	queryCmd.Flags().IntP("page", "n", 1, "page number, will display entries of that specified page, amount of pages depends on page-size")
+}
+
+func calculateLimits(pageNumber int, pageSize int, maxLen int) (int, int) {
+	lower := (pageNumber - 1) * pageSize
+	upper := lower + pageSize
+	if upper > maxLen {
+		upper = maxLen
+	}
+
+	return lower, upper
+}
+
+func printTable(propertiesData []Property, lowerLimit int, upperLimit int) {
+	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	fmt.Fprintf(tw, "Description\tPrice\tSquare Footage\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
+	fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
+
+	for i := lowerLimit; i < upperLimit; i++ {
+		p := propertiesData[i]
+
+		ammenities := ""
+		for k, v := range p.ammenities {
+			if v {
+				ammenities += k + ", "
+			}
+		}
+		ammenities = strings.TrimSuffix(ammenities, ", ")
+
+		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", p.description, p.price,
+			p.squareFootage, p.rooms, p.bathrooms, p.lighting, p.location[0], p.location[1], ammenities)
+	}
+
+	tw.Flush()
+}
+
+func startQueryLoop(startPageNumber int, pageSize int, maxPage int, properties []Property) {
+	pageNumber := startPageNumber
+	invalidKeyPressed := false
+
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = keyboard.Close()
+	}()
+
+	for {
+		if !invalidKeyPressed {
+			lowerLimit, upperLimit := calculateLimits(pageNumber, pageSize, len(properties))
+			printTable(properties, lowerLimit, upperLimit)
+
+			fmt.Println()
+			if pageNumber != 1 {
+				fmt.Print("LeftArrow -> previous page  ")
+			}
+			if pageNumber != maxPage {
+				fmt.Print("RightArrow -> next page  ")
+			}
+			fmt.Print("ESC and ENTER -> exit\n")
+		} else {
+			invalidKeyPressed = false
+		}
+
+		_, key, err := keyboard.GetKey()
+
+		if err != nil {
+			panic(err)
+		}
+
+		if key == keyboard.KeyEsc {
+			return
+		} else if key == keyboard.KeyArrowLeft && pageNumber != 1 {
+			pageNumber--
+		} else if key == keyboard.KeyArrowRight && pageNumber != maxPage {
+			pageNumber++
+		} else {
+			invalidKeyPressed = true
+			fmt.Println("Invalid key pressed")
+		}
+	}
 }
