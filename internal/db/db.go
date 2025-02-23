@@ -9,11 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
+var db *gorm.DB
+
 func Initialize(dbConfig *config.DbConfig) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
 		dbConfig.Host, dbConfig.PgUser, dbConfig.PgPassword, dbConfig.DbName, dbConfig.Port)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println("ERROR: Could not connect to Postgres:", err)
 		panic("Failed to connect to Postgres database!")
@@ -22,15 +25,17 @@ func Initialize(dbConfig *config.DbConfig) {
 	if dbConfig.SeedDatabase {
 		SeedDatabase(db)
 	}
+}
 
+func QueryPropertiesWithAmmenities(selector string) ([]models.Property, error) {
 	var properties []models.Property
-	db.Preload("Ammenities").Find(&properties)
-
-	for _, prop := range properties {
-		ammenities := ""
-		for _, a := range prop.Ammenities {
-			ammenities += a.Description + ", "
-		}
-		fmt.Println(prop.ID, prop.Description, prop.Price, prop.SquareFootage, ammenities)
+	if db == nil {
+		return properties, fmt.Errorf("database connection has not been initialized")
 	}
+
+	err := db.Where(selector).Preload("Ammenities").Find(&properties).Error
+	if err != nil {
+		return properties, err
+	}
+	return properties, nil
 }
