@@ -30,15 +30,24 @@ func Initialize(dbConfig *config.DbConfig) {
 	}
 }
 
-func QueryProperties(selector string) ([]models.Property, error) {
+func QueryProperties(selector string, limit int, offset int) ([]models.Property, error) {
 	var properties []models.Property
 	if db == nil {
 		return properties, fmt.Errorf("database connection has not been initialized")
 	}
 
-	err := db.Where(selector).Preload("Lighting").Preload("Ammenities").Find(&properties).Error
+	err := db.Where(selector).Limit(limit).Offset(offset).Preload("Lighting").Preload("Ammenities").Find(&properties).Error
 	if err != nil {
 		return properties, err
 	}
 	return properties, nil
+}
+
+func GetPropertiesCount(selector string) (int, error) {
+	var count int64
+	err := db.Model(&models.Property{}).Where(selector).Count(&count).Error
+	if err != nil {
+		return int(count), err
+	}
+	return int(count), nil
 }

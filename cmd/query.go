@@ -25,17 +25,16 @@ per page.
 Example: prop-filter-app query -p 10 -n 2`,
 	Run: func(cmd *cobra.Command, args []string) {
 		filterExpr, _ := cmd.Flags().GetString("filter")
-		propertiesData, err := db.QueryProperties(filterExpr)
-		if err != nil {
-			fmt.Println("Properties could not be queried:", err)
-			return
-		}
 
 		pageSize, _ := cmd.Flags().GetInt("page-size")
 		pageNumber, _ := cmd.Flags().GetInt("page")
-		lenData := len(propertiesData)
+		propsCount, err := db.GetPropertiesCount(filterExpr)
+		if err != nil {
+			fmt.Println("Properties could not be counted:", err)
+			return
+		}
 
-		if lenData == 0 {
+		if propsCount == 0 {
 			fmt.Println("There is no properties data available to display.")
 			return
 		}
@@ -45,8 +44,8 @@ Example: prop-filter-app query -p 10 -n 2`,
 			return
 		}
 
-		maxPage := lenData / pageSize
-		if lenData%pageSize > 0 {
+		maxPage := propsCount / pageSize
+		if propsCount%pageSize > 0 {
 			maxPage++
 		}
 
@@ -55,7 +54,7 @@ Example: prop-filter-app query -p 10 -n 2`,
 			return
 		}
 
-		startLoop(pageNumber, pageSize, maxPage, propertiesData)
+		startLoop(pageNumber, pageSize, maxPage, filterExpr)
 	},
 }
 
@@ -67,24 +66,12 @@ func init() {
 	queryCmd.Flags().StringP("filter", "f", "", "conditional SQL expression which will be used to filter queried properties")
 }
 
-func calculateLimits(pageNumber int, pageSize int, maxLen int) (int, int) {
-	lower := (pageNumber - 1) * pageSize
-	upper := lower + pageSize
-	if upper > maxLen {
-		upper = maxLen
-	}
-
-	return lower, upper
-}
-
-func printTable(propertiesData []models.Property, lowerLimit int, upperLimit int) {
+func printTable(props []models.Property) {
 	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
 	fmt.Fprintf(tw, "Description\tPrice\tSquare Footage\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
 	fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
 
-	for i := lowerLimit; i < upperLimit; i++ {
-		p := propertiesData[i]
-
+	for _, p := range props {
 		ammenities := ""
 		for _, a := range p.Ammenities {
 			ammenities += a.Description + ", "
@@ -99,7 +86,7 @@ func printTable(propertiesData []models.Property, lowerLimit int, upperLimit int
 	tw.Flush()
 }
 
-func startLoop(startPageNumber int, pageSize int, maxPage int, properties []models.Property) {
+func startLoop(startPageNumber int, pageSize int, maxPage int, filterExpr string) {
 	pageNumber := startPageNumber
 	invalidKeyPressed := false
 
@@ -112,10 +99,16 @@ func startLoop(startPageNumber int, pageSize int, maxPage int, properties []mode
 
 	for {
 		if !invalidKeyPressed {
-			lowerLimit, upperLimit := calculateLimits(pageNumber, pageSize, len(properties))
-			printTable(properties, lowerLimit, upperLimit)
+			properties, err := db.QueryProperties(filterExpr, pageSize, (pageNumber-1)*pageSize)
+			if err != nil {
+				fmt.Println("Properties could not be queried:", err)
+				return
+			}
 
 			fmt.Println()
+			printTable(properties)
+			fmt.Println()
+			fmt.Printf("Page %d / %d\n", pageNumber, maxPage)
 			if pageNumber != 1 {
 				fmt.Print("LeftArrow -> previous page  ")
 			}
