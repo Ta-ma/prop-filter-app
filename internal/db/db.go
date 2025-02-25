@@ -7,6 +7,7 @@ import (
 	"github.com/ta-ma/prop-filter-app/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
@@ -16,7 +17,9 @@ func Initialize(dbConfig *config.DbConfig) {
 		dbConfig.Host, dbConfig.PgUser, dbConfig.PgPassword, dbConfig.DbName, dbConfig.Port)
 
 	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		fmt.Println("ERROR: Could not connect to Postgres:", err)
 		panic("Failed to connect to Postgres database!")

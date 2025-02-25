@@ -91,8 +91,9 @@ func printTable(propertiesData []models.Property, lowerLimit int, upperLimit int
 		}
 		ammenities = strings.TrimSuffix(ammenities, ", ")
 
-		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", p.Description, p.Price,
-			p.SquareFootage, p.Rooms, p.Bathrooms, p.Lighting.Description, p.Latitude, p.Longitude, ammenities)
+		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(p.Description),
+			p.Price, p.SquareFootage, p.Rooms, p.Bathrooms, p.Lighting.Description, p.Latitude,
+			p.Longitude, trimString(ammenities))
 	}
 
 	tw.Flush()
@@ -143,4 +144,12 @@ func startLoop(startPageNumber int, pageSize int, maxPage int, properties []mode
 			fmt.Println("Invalid key pressed")
 		}
 	}
+}
+
+func trimString(str string) string {
+	if cfg.TrimLength != 0 && len(str) > cfg.TrimLength {
+		return str[0:cfg.TrimLength-3] + "..."
+	}
+
+	return str
 }

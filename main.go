@@ -19,5 +19,5 @@ func main() {
 	}
 
 	db.Initialize(&config.DbConfig)
-	cmd.Execute()
+	cmd.Execute(&config.Cli)
 }

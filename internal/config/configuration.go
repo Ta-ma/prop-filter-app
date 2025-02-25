@@ -1,5 +1,9 @@
 package config
 
+type Cli struct {
+	TrimLength int
+}
+
 type DbConfig struct {
 	Host         string
 	Port         uint
@@ -12,4 +16,5 @@ type DbConfig struct {
 
 type Configuration struct {
 	DbConfig DbConfig
+	Cli      Cli
 }
