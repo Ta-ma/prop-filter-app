@@ -1,87 +1,63 @@
 package db
 
 import (
+	"github.com/ta-ma/prop-filter-app/internal/datagen"
 	"github.com/ta-ma/prop-filter-app/internal/models"
 	"gorm.io/gorm"
 )
 
-func SeedDatabase(db *gorm.DB) {
-	// Ammenities
-	db.AutoMigrate(&models.Ammenity{})
+func SeedDatabase(db *gorm.DB, entries uint) {
+	// Migrate ammenities
+	deleteTable("properties_ammenities")
+	migrateTable(&models.Ammenity{})
 
-	ammenities := []models.Ammenity{
-		{Description: "pool"},
-		{Description: "garage"},
-		{Description: "yard"},
+	ammenities := make([]models.Ammenity, 0)
+	for _, a := range models.GetAmmenityValues() {
+		ammenities = append(ammenities, models.Ammenity{Description: a})
 	}
 	db.Create(&ammenities)
 
-	// Properties
-	db.AutoMigrate(&models.Property{})
+	// Migrate lightings
+	migrateTable(&models.Lighting{})
 
-	propertiesM := []models.Property{
-		{
-			SquareFootage: 500,
-			Lighting:      "low",
-			Price:         600000,
-			Rooms:         6,
-			Bathrooms:     2,
-			LocationX:     150,
-			LocationY:     250,
-			Description:   "Ample place",
-			Ammenities: []models.Ammenity{
-				{Description: "yard"}, {Description: "pool"}, {Description: "garage"},
-			},
-		},
-		{
-			SquareFootage: 300,
-			Lighting:      "high",
-			Price:         450700,
-			Rooms:         4,
-			Bathrooms:     1,
-			LocationX:     300,
-			LocationY:     800,
-			Description:   "Comfy",
-			Ammenities: []models.Ammenity{
-				{Description: "yard"},
-			},
-		},
-		{
-			SquareFootage: 200,
-			Lighting:      "low",
-			Price:         300000,
-			Rooms:         3,
-			Bathrooms:     1,
-			LocationX:     65.9,
-			LocationY:     75.7,
-			Description:   "Haunted",
-		},
-		{
-			SquareFootage: 675,
-			Lighting:      "low",
-			Price:         78050.5,
-			Rooms:         3,
-			Bathrooms:     1,
-			LocationX:     500.2,
-			LocationY:     600,
-			Description:   "Nice place",
-			Ammenities: []models.Ammenity{
-				{Description: "pool"}, {Description: "garage"},
-			},
-		},
-		{
-			SquareFootage: 333,
-			Lighting:      "low",
-			Price:         190532.976,
-			Rooms:         3,
-			Bathrooms:     1,
-			LocationX:     90,
-			LocationY:     40,
-			Description:   "Could be better",
-			Ammenities: []models.Ammenity{
-				{Description: "garage"}, {Description: "yard"},
-			},
-		},
+	lightings := make([]models.Lighting, 0)
+	for _, l := range models.GetLightingValues() {
+		lightings = append(lightings, models.Lighting{Description: l})
 	}
-	db.Create(&propertiesM)
+	db.Create(&lightings)
+
+	// Migrate properties
+	migrateTable(&models.Property{})
+
+	props := datagen.GenerateMockProperties(entries)
+	// Batch insert in slices of 1000 elements due to Postgres restrictions
+	batches := (entries / 1000)
+	if batches == 0 {
+		batches = 1
+	}
+
+	for i := uint(0); i < batches; i++ {
+		lower := 1000 * i
+		upper := 1000 * (i + 1)
+
+		if upper > entries {
+			upper = entries
+		}
+		propsSlice := props[lower:upper]
+		db.Create(&propsSlice)
+	}
+}
+
+func migrateTable[T any](model *T) {
+	if db.Migrator().HasTable(model) {
+		db.Migrator().DropTable(model)
+	}
+
+	db.AutoMigrate(model)
+}
+
+func deleteTable(tableName string) {
+	if db.Migrator().HasTable(tableName) {
+		db.Migrator().DropTable(tableName)
+	}
 }

@@ -7,6 +7,7 @@ type DbConfig struct {
 	PgPassword   string
 	DbName       string
 	SeedDatabase bool
+	SeedEntries  uint
 }
 
 type Configuration struct {

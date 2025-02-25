@@ -25,7 +25,7 @@ per page.
 Example: prop-filter-app query -p 10 -n 2`,
 	Run: func(cmd *cobra.Command, args []string) {
 		filterExpr, _ := cmd.Flags().GetString("filter")
-		propertiesData, err := db.QueryPropertiesWithAmmenities(filterExpr)
+		propertiesData, err := db.QueryProperties(filterExpr)
 		if err != nil {
 			fmt.Println("Properties could not be queried:", err)
 			return
@@ -78,7 +78,7 @@ func calculateLimits(pageNumber int, pageSize int, maxLen int) (int, int) {
 }
 
 func printTable(propertiesData []models.Property, lowerLimit int, upperLimit int) {
-	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
 	fmt.Fprintf(tw, "Description\tPrice\tSquare Footage\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
 	fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
 
@@ -92,7 +92,7 @@ func printTable(propertiesData []models.Property, lowerLimit int, upperLimit int
 		ammenities = strings.TrimSuffix(ammenities, ", ")
 
 		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", p.Description, p.Price,
-			p.SquareFootage, p.Rooms, p.Bathrooms, p.Lighting, p.LocationX, p.LocationY, ammenities)
+			p.SquareFootage, p.Rooms, p.Bathrooms, p.Lighting.Description, p.Latitude, p.Longitude, ammenities)
 	}
 
 	tw.Flush()

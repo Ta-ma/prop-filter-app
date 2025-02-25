@@ -3,6 +3,7 @@ module github.com/ta-ma/prop-filter-app
 go 1.24.0
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.2.1 // indirect
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
