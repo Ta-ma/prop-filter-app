@@ -63,16 +63,16 @@ func TestSplitExpr(t *testing.T) {
 	}
 
 	testCases := []testCase{
-		// {expr: "<999", regExpr: NumRegex,
-		// 	expected: []filterExpr{{Operator: "<", Value: "999"}}, errExpected: false},
-		// {expr: ">10000;<=20000", regExpr: NumRegex,
-		// 	expected: []filterExpr{{Operator: ">", Value: "10000"}, {Operator: "<=", Value: "20000"}}, errExpected: false},
-		// {expr: "has:yard;has:pool", regExpr: StrRegex,
-		// 	expected: []filterExpr{{Operator: "has:", Value: "yard"}, {Operator: "has:", Value: "pool"}}, errExpected: false},
-		// {expr: "has:yard;=test", regExpr: StrRegex,
-		// 	expected: []filterExpr{{Operator: "has:", Value: "yard"}, {Operator: "=", Value: "test"}}, errExpected: false},
-		// {expr: "has;yard", regExpr: StrRegex, expected: []filterExpr{}, errExpected: true},
-		// {expr: "has::yard;has:pool", regExpr: StrRegex, expected: []filterExpr{}, errExpected: true},
+		{expr: "<999", regExpr: NumRegex,
+			expected: []filterExpr{{Operator: "<", Value: "999"}}, errExpected: false},
+		{expr: ">10000;<=20000", regExpr: NumRegex,
+			expected: []filterExpr{{Operator: ">", Value: "10000"}, {Operator: "<=", Value: "20000"}}, errExpected: false},
+		{expr: "has:yard;has:pool", regExpr: StrRegex,
+			expected: []filterExpr{{Operator: "has:", Value: "yard"}, {Operator: "has:", Value: "pool"}}, errExpected: false},
+		{expr: "has:yard;=test", regExpr: StrRegex,
+			expected: []filterExpr{{Operator: "has:", Value: "yard"}, {Operator: "=", Value: "test"}}, errExpected: false},
+		{expr: "has;yard", regExpr: StrRegex, expected: []filterExpr{}, errExpected: true},
+		{expr: "has::yard;has:pool", regExpr: StrRegex, expected: []filterExpr{}, errExpected: true},
 		{expr: "has:yard;=test;", regExpr: StrRegex, expected: []filterExpr{}, errExpected: true},
 	}
 
