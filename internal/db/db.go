@@ -36,7 +36,15 @@ func QueryProperties(selector string, limit int, offset int) ([]models.Property,
 		return properties, fmt.Errorf("database connection has not been initialized")
 	}
 
-	err := db.Where(selector).Limit(limit).Offset(offset).Preload("Lighting").Preload("Ammenities").Find(&properties).Error
+	err := db.
+		Preload("Lighting").
+		Preload("Ammenities").
+		Where(selector).
+		Limit(limit).
+		Offset(offset).
+		Find(&properties).
+		Error
+
 	if err != nil {
 		return properties, err
 	}
