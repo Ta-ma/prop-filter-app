@@ -7,25 +7,13 @@ import (
 	"fmt"
 
 	"github.com/ta-ma/prop-filter-app/internal/config"
+	"github.com/ta-ma/prop-filter-app/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
-
-type QueryResult struct {
-	Description    string
-	Price          float32
-	Square_footage float32
-	Rooms          uint
-	Bathrooms      uint
-	Latitude       float64
-	Longitude      float64
-	Lighting       string
-	Ammenities     string
-	Dist           float32
-}
 
 func Initialize(dbConfig *config.DbConfig) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
@@ -45,12 +33,12 @@ func Initialize(dbConfig *config.DbConfig) {
 	}
 }
 
-func QueryProperties(queryFilter string, limit int, offset int, calcDist bool, distX string, distY string) ([]QueryResult, error) {
+func QueryProperties(queryFilter string, limit int, offset int, calcDist bool, distX string, distY string) ([]models.PropertyViewModel, error) {
 	if db == nil {
-		return []QueryResult{}, fmt.Errorf("database connection has not been initialized")
+		return []models.PropertyViewModel{}, fmt.Errorf("database connection has not been initialized")
 	}
 
-	var queryResult []QueryResult
+	var queryResult []models.PropertyViewModel
 	var queryBuilder *gorm.DB
 	if calcDist {
 		queryBuilder = getDistanceQuery(queryFilter, distX, distY)
@@ -60,7 +48,7 @@ func QueryProperties(queryFilter string, limit int, offset int, calcDist bool, d
 	err := queryBuilder.Limit(limit).Offset(offset).Scan(&queryResult).Error
 
 	if err != nil {
-		return []QueryResult{}, err
+		return []models.PropertyViewModel{}, err
 	}
 
 	return queryResult, nil

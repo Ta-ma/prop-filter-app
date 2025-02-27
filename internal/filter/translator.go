@@ -70,7 +70,6 @@ func (translator *Translator) TranslateDistanceExpr(field string, expr string) D
 
 	regex := regexp.MustCompile(DistanceRegex)
 	match := regex.FindStringSubmatch(expr)
-	fmt.Println(len(match))
 	// Should match 3 or 5 parts
 	if match == nil || (len(match) != 3 && len(match) != 5) {
 		translator.Err = fmt.Errorf(`distance expression "%s" is not valid`, expr)

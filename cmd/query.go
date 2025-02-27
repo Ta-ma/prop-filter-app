@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/ta-ma/prop-filter-app/internal/db"
 	"github.com/ta-ma/prop-filter-app/internal/filter"
+	"github.com/ta-ma/prop-filter-app/internal/models"
+	"github.com/ta-ma/prop-filter-app/internal/render"
 )
 
 var queryCmd = &cobra.Command{
@@ -87,14 +89,18 @@ Example: prop-filter-app query -w 10 -n 2 -p "<700000"`,
 			return
 		}
 
-		startLoop(pageNumber, pageHeight, maxPage, sqlFilter, calcDistance, distanceData.X, distanceData.Y)
+		if cfg.UseOldRender {
+			startLoop(pageNumber, pageHeight, maxPage, sqlFilter, calcDistance, distanceData.X, distanceData.Y)
+		} else {
+			render.ShowTeaTable(pageNumber, pageHeight, maxPage, sqlFilter, calcDistance, distanceData.X, distanceData.Y)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(queryCmd)
 
-	queryCmd.Flags().IntP("page-size", "w", 20, "page size, amount of entries listed in each page")
+	queryCmd.Flags().IntP("page-size", "w", 15, "page size, amount of entries listed in each page")
 	queryCmd.Flags().IntP("page", "n", 1, "page number, will display entries of that specified page, amount of pages depends on page-size")
 	queryCmd.Flags().StringP("price", "p", "", "Expression to filter entries by the Price field")
 	queryCmd.Flags().StringP("rooms", "r", "", "Expression to filter entries by the Rooms field")
@@ -108,7 +114,7 @@ func init() {
 	queryCmd.Flags().StringP("distance", "k", "", "Expression to filter entries by the Description field")
 }
 
-func printTable(result []db.QueryResult, calcDist bool) {
+func printTable(result []models.PropertyViewModel, calcDist bool) {
 	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
 	if calcDist {
 		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tDistance\tAmmenities\n")

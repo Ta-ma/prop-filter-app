@@ -2,6 +2,8 @@
 
 This is a demo project for a CLI application which is capable of querying a list of real estate data and filter it using operators.
 
+![](demo.gif)
+
 ## Requirements
 
 To run this application, the following requirements must be met:
@@ -19,18 +21,20 @@ To run this application, the following requirements must be met:
 - Open a terminal in the repository folder and run `go run main.go query`
   - Alternatively, you can install the application by running `go install`
   - Now you can run it from any terminal: `filter-prop-app query`
+- If the table is not rendering properly, make sure the terminal window height and width so that it looks like the attached .gif. 
+- If it still doesn't work properly you can try using the old render (see the **Configuration** section).
 
 ## Usage
 
 When running the `query` command, it will list all entries found in the database in a table like format. The data will not be shown all at once but rather in pages (by default, it will start on page 1).
 
-Here the user can press the **LeftArrow** and **RightArrow** keys to navigate to the previous/next page. 
+Here the user can press the **LeftArrow** and **RightArrow** keys to navigate to the previous/next page, and **UpArrow** and **DownArrow** to move the selected row. The currently selected properties details will be shown above the table. 
 
-To exit, press **ESC and then Enter**.
+To exit, press **Q**.
 
 Additionally, parameters can be passed to the `query` command to change it's behaviour, filter the data or provide additional information:
 
-- `--page-size`, `-w`: How many entries will be shown per page. Default is 20.
+- `--page-size`, `-w`: How many entries will be shown per page. Default is 15.
 - `--page`, `-n`: If specified, the command will jump to this page number directly. Default is 1. The max value allowed for this value is the amount of pages that are available to display, which depends on the page-size parameter and the amount of data in the database.
 
 Example: `query -w 10 -n 5` will show 10 entries per page and will being by displaying data at the page number 5.
@@ -97,15 +101,16 @@ The configuration parameters are read from a `config.json` file located in the s
 {
 	"DbConfig": {
 		"Host": "LocalHost",
-		"Port": 5432,
+		"Port": 8080,
 		"PgUser": "dbadmin",
 		"PgPassword": "filterpr0p",
 		"DbName": "filter-prop",
 		"SeedDatabase": false,
-		"SeedEntries": 300
+		"SeedEntries": 30000
 	},
 	"Cli": {
-		"TrimLength": 30
+		"TrimLength": 30,
+		"UseOldRender": false
 	}
 }
 ```
@@ -122,7 +127,8 @@ The configuration parameters are read from a `config.json` file located in the s
 
 ### Cli
 
-- `TrimLength`: The values in columns `Description` and `Ammenities` will be trimmed if they exceed the length specified by this value. If 0, the values won't be trimmed.
+- `TrimLength`: (only if UseOldRender is true) The values in columns `Description` and `Ammenities` will be trimmed if they exceed the length specified by this value. If 0, the values won't be trimmed.
+- `UseOldRender`: Renders the table using Go's TableWriter instead of BubbleTea. This version is more limited in features but might be useful if the terminal is not able to work properly with BubbleTea.
 
 ### Tools and dependencies
 
@@ -133,4 +139,6 @@ These have been vital in order for me to make this application. Big thank you to
 - [GORM](https://gorm.io/)
 - [gofakeit](https://github.com/brianvoe/gofakeit)
 - [Testify](https://github.com/stretchr/testify)
-- [eiannone/keyboard](https://github.com/eiannone/keyboard)
+- [Bubble Tea](https://github.com/charmbracelet/bubbletea)
+- [Bubbles](https://github.com/charmbracelet/bubbles)
+- [Lip Gloss](https://github.com/charmbracelet/lipgloss)

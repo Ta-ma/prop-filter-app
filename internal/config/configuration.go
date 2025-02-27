@@ -4,7 +4,8 @@ Copyright © 2025 Santiago Tamashiro <santiago.tamashiro@gmail.com>
 package config
 
 type Cli struct {
-	TrimLength int
+	TrimLength   int
+	UseOldRender bool
 }
 
 type DbConfig struct {

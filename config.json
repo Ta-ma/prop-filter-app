@@ -9,6 +9,7 @@
 		"SeedEntries": 30000
 	},
 	"Cli": {
-		"TrimLength": 30
+		"TrimLength": 30,
+		"UseOldRender": false
 	}
 }
