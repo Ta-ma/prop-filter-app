@@ -1,0 +1,14 @@
+{
+	"DbConfig": {
+		"Host": "LocalHost",
+		"Port": 8080,
+		"PgUser": "dbadmin",
+		"PgPassword": "filterpr0p",
+		"DbName": "filter-prop",
+		"SeedDatabase": false,
+		"SeedEntries": 30000
+	},
+	"Cli": {
+		"TrimLength": 30
+	}
+}
