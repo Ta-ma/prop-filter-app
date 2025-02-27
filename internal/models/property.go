@@ -14,5 +14,5 @@ type Property struct {
 	Description   string
 	Lighting      Lighting
 	LightingID    uint
-	Ammenities    []Ammenity `gorm:"many2many:properties_ammenities;"`
+	Amenities     []Amenity `gorm:"many2many:properties_amenities;"`
 }

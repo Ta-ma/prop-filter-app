@@ -12,16 +12,16 @@ import (
 )
 
 func SeedDatabase(db *gorm.DB, entries uint) {
-	// Migrate ammenities
+	// Migrate amenities
 	fmt.Println("DB: Migrating tables...")
-	deleteTable("properties_ammenities")
-	migrateTable(&models.Ammenity{})
+	deleteTable("properties_amenities")
+	migrateTable(&models.Amenity{})
 
-	ammenities := make([]models.Ammenity, 0)
-	for _, a := range models.GetAmmenityValues() {
-		ammenities = append(ammenities, models.Ammenity{Description: a})
+	amenities := make([]models.Amenity, 0)
+	for _, a := range models.GetAmenityValues() {
+		amenities = append(amenities, models.Amenity{Description: a})
 	}
-	db.Create(&ammenities)
+	db.Create(&amenities)
 
 	// Migrate lightings
 	migrateTable(&models.Lighting{})

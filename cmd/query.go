@@ -34,7 +34,7 @@ Example: prop-filter-app query -w 10 -n 2 -p "<700000"`,
 		longitudeExpr, _ := cmd.Flags().GetString("longitude")
 		sqftExpr, _ := cmd.Flags().GetString("sqft")
 		descExpr, _ := cmd.Flags().GetString("description")
-		ammenitiesExpr, _ := cmd.Flags().GetString("ammenities")
+		amenitiesExpr, _ := cmd.Flags().GetString("amenities")
 		lightingExpr, _ := cmd.Flags().GetString("lighting")
 		distanceExpr, _ := cmd.Flags().GetString("distance")
 
@@ -48,7 +48,7 @@ Example: prop-filter-app query -w 10 -n 2 -p "<700000"`,
 		translator.Translate("p.square_footage", sqftExpr, filter.Num)
 		translator.Translate("p.description", descExpr, filter.Str)
 		translator.Translate("l.description", lightingExpr, filter.Lighting)
-		translator.Translate("a.description", ammenitiesExpr, filter.Ammenity)
+		translator.Translate("a.description", amenitiesExpr, filter.Amenity)
 
 		var calcDistance bool
 		var distanceData filter.DistanceFilterData
@@ -109,7 +109,7 @@ func init() {
 	queryCmd.Flags().StringP("longitude", "y", "", "Expression to filter entries by the Longitude field")
 	queryCmd.Flags().StringP("sqft", "s", "", "Expression to filter entries by the Square ft field")
 	queryCmd.Flags().StringP("description", "d", "", "Expression to filter entries by the Description field")
-	queryCmd.Flags().StringP("ammenities", "a", "", "Expression to filter entries by the Ammenities field")
+	queryCmd.Flags().StringP("amenities", "a", "", "Expression to filter entries by the Amenities field")
 	queryCmd.Flags().StringP("lighting", "l", "", "Expression to filter entries by the Lighting field")
 	queryCmd.Flags().StringP("distance", "k", "", "Expression to filter entries by the Description field")
 }
@@ -117,20 +117,20 @@ func init() {
 func printTable(result []models.PropertyViewModel, calcDist bool) {
 	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
 	if calcDist {
-		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tDistance\tAmmenities\n")
+		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tDistance\tAmenities\n")
 		fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
 		for _, r := range result {
 			fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%.2f\t%s\n", trimString(r.Description),
 				r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude, r.Longitude,
-				r.Dist, r.Ammenities)
+				r.Dist, r.Amenities)
 		}
 	} else {
-		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
+		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tAmenities\n")
 		fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
 		for _, r := range result {
 			fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(r.Description),
 				r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude,
-				r.Longitude, r.Ammenities)
+				r.Longitude, r.Amenities)
 		}
 	}
 

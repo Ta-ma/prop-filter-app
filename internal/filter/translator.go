@@ -15,13 +15,13 @@ const (
 	Str ExprType = iota
 	Num
 	Lighting
-	Ammenity
+	Amenity
 )
 
 const StrRegex = `^(=|has:)((?:\w|\s|,)+)$`
 const NumRegex = `^(<|>|=|>=|<=)([+-]?(?:[0-9]+[.])?[0-9]+)$`
 const LightingRegex = `^(=)(low|medium|high)$`
-const AmmenityRegex = `^(=|has:)(yard|pool|garage|rooftop|waterfront)$`
+const AmenityRegex = `^(=|has:)(yard|pool|garage|rooftop|waterfront)$`
 const DistanceRegex = `^distance\(([+-]?(?:[0-9]+[.])?[0-9]+),([+-]?(?:[0-9]+[.])?[0-9]+)\)(?:(<|>|=|>=|<=)([+-]?(?:[0-9]+[.])?[0-9]+))?$`
 const Separator = ";"
 
@@ -99,8 +99,8 @@ func TranslateToSql(field string, expr string, exprType ExprType) (string, error
 		sqlCondition, err = translateFilterExpr(field, expr, NumRegex, translateNumExpr)
 	case Lighting:
 		sqlCondition, err = translateFilterExpr(field, expr, LightingRegex, translateStrExpr)
-	case Ammenity:
-		sqlCondition, err = translateFilterExpr(field, expr, AmmenityRegex, translateStrExpr)
+	case Amenity:
+		sqlCondition, err = translateFilterExpr(field, expr, AmenityRegex, translateStrExpr)
 	}
 
 	if err != nil {

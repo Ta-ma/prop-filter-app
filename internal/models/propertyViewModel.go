@@ -12,6 +12,6 @@ type PropertyViewModel struct {
 	Latitude       float64
 	Longitude      float64
 	Lighting       string
-	Ammenities     string
+	Amenities      string
 	Dist           float32
 }

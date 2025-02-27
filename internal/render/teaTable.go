@@ -80,7 +80,7 @@ func (m model) getDetails() string {
 	if m.calcDistance {
 		columns = append(columns, "Distance")
 	}
-	columns = append(columns, "Ammenities")
+	columns = append(columns, "Amenities")
 
 	for i, c := range columns {
 		lines = append(lines, fmt.Sprintf("%s: %s", c, row[i]))
@@ -122,7 +122,7 @@ func ShowTeaTable(startPageNumber int, pageHeight int, maxPage int, queryFilter 
 	if calcDistance {
 		columns = append(columns, table.Column{Title: "Distance", Width: 10})
 	}
-	columns = append(columns, table.Column{Title: "Ammenities", Width: 20})
+	columns = append(columns, table.Column{Title: "Amenities", Width: 20})
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -169,7 +169,7 @@ func mapPropertiesToRows(results []models.PropertyViewModel, calcDistance bool) 
 		if calcDistance {
 			row = append(row, distance)
 		}
-		row = append(row, r.Ammenities)
+		row = append(row, r.Amenities)
 
 		rows = append(rows, row)
 	}

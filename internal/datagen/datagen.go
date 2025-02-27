@@ -14,21 +14,21 @@ func GenerateMockProperties(amount uint) []models.Property {
 	var properties []models.Property = make([]models.Property, 0)
 	var addr *gofakeit.AddressInfo
 
-	maxAmmenities := len(models.GetAmmenityValues())
-	ammenityIds := make([]int, maxAmmenities)
-	for j := 0; j < maxAmmenities; j++ {
-		ammenityIds[j] = j + 1
+	maxAmenities := len(models.GetAmenityValues())
+	amenityIds := make([]int, maxAmenities)
+	for j := 0; j < maxAmenities; j++ {
+		amenityIds[j] = j + 1
 	}
 
 	for i := uint(0); i < amount; i++ {
 		addr = gofakeit.Address()
 
-		// Shuffle ammenities list and pick a random amount of them
-		gofakeit.ShuffleInts(ammenityIds)
-		ammenities := make([]models.Ammenity, 0)
-		ammenitiesCount := gofakeit.IntRange(0, maxAmmenities)
-		for j := 0; j < ammenitiesCount; j++ {
-			ammenities = append(ammenities, models.Ammenity{ID: uint(ammenityIds[j])})
+		// Shuffle amenities list and pick a random amount of them
+		gofakeit.ShuffleInts(amenityIds)
+		amenities := make([]models.Amenity, 0)
+		amenitiesCount := gofakeit.IntRange(0, maxAmenities)
+		for j := 0; j < amenitiesCount; j++ {
+			amenities = append(amenities, models.Amenity{ID: uint(amenityIds[j])})
 		}
 
 		properties = append(properties, models.Property{
@@ -41,7 +41,7 @@ func GenerateMockProperties(amount uint) []models.Property {
 			Latitude:      addr.Latitude,
 			Longitude:     addr.Longitude,
 			Description:   fmt.Sprintf("%s %s, %s", addr.Street, addr.City, addr.State),
-			Ammenities:    ammenities,
+			Amenities:     amenities,
 		})
 	}
 

@@ -68,13 +68,13 @@ Example: `query -p ">=250000.0;<=475000.0" -b "=3"` will list properties that ha
 
 The operator can be one of the following:
 - `--description`, `-d`
-- `--ammenities`, `-a`: Possible values for this parameter are `yard`, `pool`, `garage`, `rooftop` or `waterfront`.
+- `--amenities`, `-a`: Possible values for this parameter are `yard`, `pool`, `garage`, `rooftop` or `waterfront`.
 - `--lighting`, `-l`: This parameter is special in that it only allows the `=` operator, and the allowed values are `low`, `medium` or `high`
 
 Examples:
 - `query -d "has:Alaska"` will list properties that have the word "Alaska" or "alaska" in their description.
 - `query -a "=yard" -l "=high"` will list properties that only have a yard as an amenity and that have a high lighting.
-- `query -d "has:south" -a "has:pool;has:garage` will list properties that have the word "south" in the description, and have at least a pool and a garage as ammenities.
+- `query -d "has:south" -a "has:pool;has:garage` will list properties that have the word "south" in the description, and have at least a pool and a garage as amenities.
 
 ### Text filter parameters
 
@@ -130,7 +130,7 @@ The configuration parameters are read from a `config.json` file located in the s
 
 ### Cli
 
-- `TrimLength`: (only if UseOldRender is true) The values in columns `Description` and `Ammenities` will be trimmed if they exceed the length specified by this value. If 0, the values won't be trimmed.
+- `TrimLength`: (only if UseOldRender is true) The values in columns `Description` and `Amenities` will be trimmed if they exceed the length specified by this value. If 0, the values won't be trimmed.
 - `UseOldRender`: Renders the table using Go's TableWriter instead of BubbleTea. This version is more limited in features but might be useful if the terminal is not able to work properly with BubbleTea.
 
 ## Potential improvements

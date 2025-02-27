@@ -74,13 +74,13 @@ func GetPropertiesCount(queryFilter string, calcDist bool, distX string, distY s
 func getStandardQuery(queryFilter string) *gorm.DB {
 	selectStatement :=
 		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
-			"l.description as lighting, STRING_AGG(a.description, ',') ammenities"
+			"l.description as lighting, STRING_AGG(a.description, ',') amenities"
 
 	return db.Table("properties as p").
 		Select(selectStatement).
 		Joins("join lightings l on p.lighting_id = l.id").
-		Joins("left join properties_ammenities pa on p.id = pa.property_id").
-		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Joins("left join properties_amenities pa on p.id = pa.property_id").
+		Joins("left join amenities a on a.id = pa.amenity_id").
 		Group("p.id, l.description").
 		Where(queryFilter)
 }
@@ -88,7 +88,7 @@ func getStandardQuery(queryFilter string) *gorm.DB {
 func getDistanceQuery(queryFilter string, distX string, distY string) *gorm.DB {
 	selectStatement :=
 		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
-			"l.description as lighting, STRING_AGG(a.description, ',') ammenities, d.dist"
+			"l.description as lighting, STRING_AGG(a.description, ',') amenities, d.dist"
 
 	distStatement :=
 		fmt.Sprintf("join (select id, fn_spheric_distance(%s, %s, latitude, longitude) as dist from properties) d on p.id = d.id", distX, distY)
@@ -97,8 +97,8 @@ func getDistanceQuery(queryFilter string, distX string, distY string) *gorm.DB {
 		Select(selectStatement).
 		Joins("join lightings l on p.lighting_id = l.id").
 		Joins(distStatement).
-		Joins("left join properties_ammenities pa on p.id = pa.property_id").
-		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Joins("left join properties_amenities pa on p.id = pa.property_id").
+		Joins("left join amenities a on a.id = pa.amenity_id").
 		Group("p.id, l.description, d.dist").
 		Where(queryFilter)
 }
