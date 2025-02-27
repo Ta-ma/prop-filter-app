@@ -21,9 +21,11 @@ To run this application, the following requirements must be met:
 - Open a terminal in the repository folder
 - Run `go run main.go query`
   - Alternatively, you can install the application by running `go install`
-  - Now you can run it from any terminal: `filter-prop-app query`
+  - Now you can run `filter-prop-app query`
 - If the table is not rendering properly, change the terminal window height and width so that it looks like the attached .gif. 
 - If it still doesn't work properly, you can try using the old render (see the **Configuration** section).
+
+*NOTE*: When the application starts, it will perform database migrations and seed it with mock data. During this process a delay is expected before the table is rendered, depending on how many entries are being generated. This can be disabled in the `config.json` file.
 
 ## Usage
 
@@ -33,7 +35,7 @@ Here the user can press the **LeftArrow** and **RightArrow** keys to navigate to
 
 To exit, press **Q**.
 
-Additionally, parameters can be passed to the `query` command to change it's behaviour, filter the data or provide additional information:
+Additionally, parameters can be passed to the `query` command to change its behaviour, filter the data or provide additional information:
 
 - `--page-size`, `-w`: How many entries will be shown per page. Default is 15.
 - `--page`, `-n`: If specified, the command will jump to this page number directly. Default is 1. The max value allowed for this value is the amount of pages that are available to display, which depends on the page-size parameter and the amount of data in the database.
@@ -60,7 +62,7 @@ Multiple filter parameters can be passed to the `query` command, for example `qu
 
 Filter expressions can also be chained to apply more than 1 filter to a single value.
 
-Example: `query -p ">=250000.0;<=475000.0" -b "=3"` will list properties that have exactly 3 bathroos and the price is between 250000 and 475000.
+Example: `query -p ">=250000.0;<=475000.0" -b "=3"` will list properties that have exactly 3 bathrooms and the price is between 250000 and 475000.
   - `<op>`: Can be `=` (the field must match the value, casing ignored) or `has:` (the field must contain the value, casing ignored)
   - `<value>`: A text value which can be made of any combination of word characters (letters and numbers)
 
@@ -71,12 +73,12 @@ The operator can be one of the following:
 
 Examples:
 - `query -d "has:Alaska"` will list properties that have the word "Alaska" or "alaska" in their description.
-- `query -a "=yard" -l "=high"` will list properties that only have a yard as an ammenity and that have a high lighting.
+- `query -a "=yard" -l "=high"` will list properties that only have a yard as an amenity and that have a high lighting.
 - `query -d "has:south" -a "has:pool;has:garage` will list properties that have the word "south" in the description, and have at least a pool and a garage as ammenities.
 
 ### Text filter parameters
 
-Entries can also be filtered by their text values. The format is also `"<op><value>"`, operators in this case are different but they can be chained just like the numerical filters:
+Entries can also be filtered by their text values. The format is also `"<op><value>"`, operators in this case are different, but they can be chained just like the numerical filters:
 
 ### Distance parameter
 
@@ -86,7 +88,7 @@ The usage of this parameter is `--distance "distance(x,y)"` where `x` and `y` ar
 
 Example: `query -k "distance(571.8,-332.94)"` will show all properties and the distance in miles between their location and the coordinates 571.8, -332.94
 
-Properties can also be filtered by this parater using a single numerical operator and value.
+Properties can also be filtered by this parameter using a single numerical operator and value.
 
 Example: `query -k "distance(-61.68,10.30)<4000"` will list properties that are less than 4000 miles in distance to the coordinates -61.68, 10.30.
 
@@ -124,7 +126,7 @@ The configuration parameters are read from a `config.json` file located in the s
 - `PgPassword`: Password of the Postgres server.
 - `DbName`: Name of the database where the properties data tables are located. The specified user must have read access to this database (and permissions to create tables and functions if SeedDatabase is true)
 - `SeedDatabase`: If true, when the query command is run it will automatically create the required functions and tables and populate them with mock data.
-- `SeedEntries`: If `SeedDatabase` is true, the amount of entries that will be generated in the properties database.
+- `SeedEntries`: If `SeedDatabase` is true, the amount of properties that will be generated in the database.
 
 ### Cli
 

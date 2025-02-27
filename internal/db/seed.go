@@ -4,6 +4,8 @@ Copyright © 2025 Santiago Tamashiro <santiago.tamashiro@gmail.com>
 package db
 
 import (
+	"fmt"
+
 	"github.com/ta-ma/prop-filter-app/internal/datagen"
 	"github.com/ta-ma/prop-filter-app/internal/models"
 	"gorm.io/gorm"
@@ -11,6 +13,7 @@ import (
 
 func SeedDatabase(db *gorm.DB, entries uint) {
 	// Migrate ammenities
+	fmt.Println("DB: Migrating tables...")
 	deleteTable("properties_ammenities")
 	migrateTable(&models.Ammenity{})
 
@@ -33,6 +36,7 @@ func SeedDatabase(db *gorm.DB, entries uint) {
 	migrateTable(&models.Property{})
 
 	// Create haversine function
+	fmt.Println("DB: Creating functions...")
 	db.Exec(`create function fn_spheric_distance(x1 float, y1 float, x2 float, y2 float) returns float 
 as
 $$
@@ -50,6 +54,7 @@ return 2 * earth_radius_miles * ASIN(SQRT(hav_alpha));
 end;
 $$
 language plpgsql;`)
+	fmt.Println("DB: Generating mock data...")
 	props := datagen.GenerateMockProperties(entries)
 	// Batch insert in slices of 1000 elements due to Postgres restrictions
 	batches := (entries / 1000)
@@ -67,6 +72,7 @@ language plpgsql;`)
 		propsSlice := props[lower:upper]
 		db.Create(&propsSlice)
 	}
+	fmt.Println("DB: Seeding finished.")
 }
 
 func migrateTable[T any](model *T) {
