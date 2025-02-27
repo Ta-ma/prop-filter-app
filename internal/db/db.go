@@ -21,6 +21,7 @@ type QueryResult struct {
 	Longitude      float64
 	Lighting       string
 	Ammenities     string
+	Dist           float32
 }
 
 func Initialize(dbConfig *config.DbConfig) {
@@ -41,24 +42,19 @@ func Initialize(dbConfig *config.DbConfig) {
 	}
 }
 
-func QueryProperties(queryFilter string, limit int, offset int) ([]QueryResult, error) {
+func QueryProperties(queryFilter string, limit int, offset int, calcDist bool, distX string, distY string) ([]QueryResult, error) {
 	if db == nil {
 		return []QueryResult{}, fmt.Errorf("database connection has not been initialized")
 	}
 
 	var queryResult []QueryResult
-	err := db.
-		Table("properties as p").
-		Select("p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude, l.description as lighting, STRING_AGG(a.description, ',') ammenities").
-		Joins("join lightings l on p.lighting_id = l.id").
-		Joins("left join properties_ammenities pa on p.id = pa.property_id").
-		Joins("left join ammenities a on a.id = pa.ammenity_id").
-		Group("p.id, l.description").
-		Where(queryFilter).
-		Limit(limit).
-		Offset(offset).
-		Scan(&queryResult).
-		Error
+	var queryBuilder *gorm.DB
+	if calcDist {
+		queryBuilder = getDistanceQuery(queryFilter, distX, distY)
+	} else {
+		queryBuilder = getStandardQuery(queryFilter)
+	}
+	err := queryBuilder.Limit(limit).Offset(offset).Scan(&queryResult).Error
 
 	if err != nil {
 		return []QueryResult{}, err
@@ -67,21 +63,51 @@ func QueryProperties(queryFilter string, limit int, offset int) ([]QueryResult, 
 	return queryResult, nil
 }
 
-func GetPropertiesCount(queryFilter string) (int, error) {
+func GetPropertiesCount(queryFilter string, calcDist bool, distX string, distY string) (int, error) {
 	var count int64
-	err := db.
-		Table("properties as p").
-		Select("p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude, l.description as lighting, STRING_AGG(a.description, ',')").
-		Joins("join lightings l on p.lighting_id = l.id").
-		Joins("left join properties_ammenities pa on p.id = pa.property_id").
-		Joins("left join ammenities a on a.id = pa.ammenity_id").
-		Group("p.id, l.description").
-		Where(queryFilter).
-		Count(&count).
-		Error
+	var queryBuilder *gorm.DB
+	if calcDist {
+		queryBuilder = getDistanceQuery(queryFilter, distX, distY)
+	} else {
+		queryBuilder = getStandardQuery(queryFilter)
+	}
+
+	err := queryBuilder.Count(&count).Error
 
 	if err != nil {
 		return int(count), err
 	}
 	return int(count), nil
+}
+
+func getStandardQuery(queryFilter string) *gorm.DB {
+	selectStatement :=
+		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
+			"l.description as lighting, STRING_AGG(a.description, ',') ammenities"
+
+	return db.Table("properties as p").
+		Select(selectStatement).
+		Joins("join lightings l on p.lighting_id = l.id").
+		Joins("left join properties_ammenities pa on p.id = pa.property_id").
+		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Group("p.id, l.description").
+		Where(queryFilter)
+}
+
+func getDistanceQuery(queryFilter string, distX string, distY string) *gorm.DB {
+	selectStatement :=
+		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
+			"l.description as lighting, STRING_AGG(a.description, ',') ammenities, d.dist"
+
+	distStatement :=
+		fmt.Sprintf("join (select id, fn_spheric_distance(%s, %s, latitude, longitude) as dist from properties) d on p.id = d.id", distX, distY)
+
+	return db.Table("properties as p").
+		Select(selectStatement).
+		Joins("join lightings l on p.lighting_id = l.id").
+		Joins(distStatement).
+		Joins("left join properties_ammenities pa on p.id = pa.property_id").
+		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Group("p.id, l.description, d.dist").
+		Where(queryFilter)
 }

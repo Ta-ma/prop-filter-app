@@ -29,6 +29,24 @@ func SeedDatabase(db *gorm.DB, entries uint) {
 	// Migrate properties
 	migrateTable(&models.Property{})
 
+	// Create haversine function
+	db.Exec(`create function fn_spheric_distance(x1 float, y1 float, x2 float, y2 float) returns float 
+as
+$$
+declare 
+	x1_radians float := x1 * PI() / 180; 
+	y1_radians float := y1 * PI() / 180;
+	x2_radians float := x2 * PI() / 180;
+	y2_radians float := y2 * PI() / 180;
+	earth_radius_miles float := 3958.939; 
+	hav_theta float := (1 - COS(x1_radians - x2_radians)) / 2;
+	hav_phi float := (1 - COS(y1_radians - y2_radians)) / 2;
+	hav_alpha float := hav_theta + COS(x1_radians) * COS(x2_radians) * hav_phi;
+begin
+return 2 * earth_radius_miles * ASIN(SQRT(hav_alpha));
+end;
+$$
+language plpgsql;`)
 	props := datagen.GenerateMockProperties(entries)
 	// Batch insert in slices of 1000 elements due to Postgres restrictions
 	batches := (entries / 1000)

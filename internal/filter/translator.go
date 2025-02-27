@@ -19,11 +19,18 @@ const StrRegex = `^(=|has:)((?:\w|\s|,)+)$`
 const NumRegex = `^(<|>|=|>=|<=)([+-]?(?:[0-9]+[.])?[0-9]+)$`
 const LightingRegex = `^(=)(low|medium|high)$`
 const AmmenityRegex = `^(=|has:)(yard|pool|garage|rooftop|waterfront)$`
+const DistanceRegex = `^distance\(([+-]?(?:[0-9]+[.])?[0-9]+),([+-]?(?:[0-9]+[.])?[0-9]+)\)(?:(<|>|=|>=|<=)([+-]?(?:[0-9]+[.])?[0-9]+))?$`
 const Separator = ";"
 
 type filterExpr struct {
 	Operator string
 	Value    string
+}
+
+type DistanceFilterData struct {
+	X   string
+	Y   string
+	Sql string
 }
 
 type Translator struct {
@@ -51,6 +58,32 @@ func (translator *Translator) Translate(field string, expr string, exprType Expr
 
 func (translator *Translator) GetSqlTranslation() string {
 	return strings.Join(translator.Translations, " and ")
+}
+
+func (translator *Translator) TranslateDistanceExpr(field string, expr string) DistanceFilterData {
+	if translator.Err != nil || field == "" || expr == "" {
+		return DistanceFilterData{}
+	}
+
+	regex := regexp.MustCompile(DistanceRegex)
+	match := regex.FindStringSubmatch(expr)
+	fmt.Println(len(match))
+	// Should match 3 or 5 parts
+	if match == nil || (len(match) != 3 && len(match) != 5) {
+		translator.Err = fmt.Errorf(`distance expression "%s" is not valid`, expr)
+		return DistanceFilterData{}
+	}
+
+	var data DistanceFilterData
+	data.X = match[1]
+	data.Y = match[2]
+	// Check if additional operator and value has been provided besides the distance()
+	if len(match) == 5 && match[3] != "" && match[4] != "" {
+		data.Sql = fmt.Sprintf("%s %s %s", field, match[3], match[4])
+		translator.Translations = append(translator.Translations, data.Sql)
+	}
+
+	return data
 }
 
 func TranslateToSql(field string, expr string, exprType ExprType) (string, error) {

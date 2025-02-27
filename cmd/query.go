@@ -34,6 +34,7 @@ Example: prop-filter-app query -w 10 -n 2`,
 		descExpr, _ := cmd.Flags().GetString("description")
 		ammenitiesExpr, _ := cmd.Flags().GetString("ammenities")
 		lightingExpr, _ := cmd.Flags().GetString("lighting")
+		distanceExpr, _ := cmd.Flags().GetString("distance")
 
 		translator := filter.Translator{}
 		translator.Init()
@@ -46,13 +47,21 @@ Example: prop-filter-app query -w 10 -n 2`,
 		translator.Translate("p.description", descExpr, filter.Str)
 		translator.Translate("l.description", lightingExpr, filter.Lighting)
 		translator.Translate("a.description", ammenitiesExpr, filter.Ammenity)
+
+		var calcDistance bool
+		var distanceData filter.DistanceFilterData
+		if distanceExpr != "" {
+			calcDistance = true
+			distanceData = translator.TranslateDistanceExpr("d.dist", distanceExpr)
+		}
+
 		if translator.Err != nil {
 			fmt.Println("Failed to parse filter parameters:", translator.Err)
 			return
 		}
 		sqlFilter := translator.GetSqlTranslation()
 
-		propsCount, err := db.GetPropertiesCount(sqlFilter)
+		propsCount, err := db.GetPropertiesCount(sqlFilter, calcDistance, distanceData.X, distanceData.Y)
 		if err != nil {
 			fmt.Println("Properties could not be counted:", err)
 			return
@@ -78,7 +87,7 @@ Example: prop-filter-app query -w 10 -n 2`,
 			return
 		}
 
-		startLoop(pageNumber, pageHeight, maxPage, sqlFilter)
+		startLoop(pageNumber, pageHeight, maxPage, sqlFilter, calcDistance, distanceData.X, distanceData.Y)
 	},
 }
 
@@ -96,23 +105,33 @@ func init() {
 	queryCmd.Flags().StringP("description", "d", "", "Expression to filter entries by the Description field")
 	queryCmd.Flags().StringP("ammenities", "a", "", "Expression to filter entries by the Ammenities field")
 	queryCmd.Flags().StringP("lighting", "l", "", "Expression to filter entries by the Lighting field")
+	queryCmd.Flags().StringP("distance", "k", "", "Expression to filter entries by the Description field")
 }
 
-func printTable(result []db.QueryResult) {
+func printTable(result []db.QueryResult, calcDist bool) {
 	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
-	fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
-	fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
-
-	for _, r := range result {
-		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(r.Description),
-			r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude,
-			r.Longitude, r.Ammenities)
+	if calcDist {
+		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tDistance\tAmmenities\n")
+		fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
+		for _, r := range result {
+			fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%.2f\t%s\n", trimString(r.Description),
+				r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude, r.Longitude,
+				r.Dist, r.Ammenities)
+		}
+	} else {
+		fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
+		fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
+		for _, r := range result {
+			fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(r.Description),
+				r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude,
+				r.Longitude, r.Ammenities)
+		}
 	}
 
 	tw.Flush()
 }
 
-func startLoop(startPageNumber int, pageHeight int, maxPage int, queryFilter string) {
+func startLoop(startPageNumber int, pageHeight int, maxPage int, queryFilter string, calcDistance bool, distX string, distY string) {
 	pageNumber := startPageNumber
 	invalidKeyPressed := false
 
@@ -125,14 +144,14 @@ func startLoop(startPageNumber int, pageHeight int, maxPage int, queryFilter str
 
 	for {
 		if !invalidKeyPressed {
-			properties, err := db.QueryProperties(queryFilter, pageHeight, (pageNumber-1)*pageHeight)
+			properties, err := db.QueryProperties(queryFilter, pageHeight, (pageNumber-1)*pageHeight, calcDistance, distX, distY)
 			if err != nil {
 				fmt.Println("Properties could not be queried:", err)
 				return
 			}
 
 			fmt.Println()
-			printTable(properties)
+			printTable(properties, calcDistance)
 			fmt.Println()
 			fmt.Printf("Page %d / %d\n", pageNumber, maxPage)
 			if pageNumber != 1 {
