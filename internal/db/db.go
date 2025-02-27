@@ -1,3 +1,6 @@
+/*
+Copyright © 2025 Santiago Tamashiro <santiago.tamashiro@gmail.com>
+*/
 package db
 
 import (

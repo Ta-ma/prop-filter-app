@@ -17,7 +17,7 @@ var rootCmd = &cobra.Command{
 	Use:   "prop-filter-app",
 	Short: "Command-line tool to filter real estate data",
 	Long: `This application allows you to query real estate data using a variety
-of operators`,
+of operators. Use the command query -h for more information.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

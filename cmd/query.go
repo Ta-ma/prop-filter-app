@@ -21,7 +21,7 @@ var queryCmd = &cobra.Command{
 The resulting filtered data will be printed in a table, limited by the max amount of entries
 per page.
 
-Example: prop-filter-app query -w 10 -n 2`,
+Example: prop-filter-app query -w 10 -n 2 -p "<700000"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		pageHeight, _ := cmd.Flags().GetInt("page-size")
 		pageNumber, _ := cmd.Flags().GetInt("page")
