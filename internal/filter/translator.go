@@ -79,7 +79,7 @@ func (translator *Translator) TranslateDistanceExpr(field string, expr string) D
 	var data DistanceFilterData
 	data.X = match[1]
 	data.Y = match[2]
-	// Check if additional operator and value has been provided besides the distance()
+	// Check if additional operator and value have been provided besides the distance()
 	if len(match) == 5 && match[3] != "" && match[4] != "" {
 		data.Sql = fmt.Sprintf("%s %s %s", field, match[3], match[4])
 		translator.Translations = append(translator.Translations, data.Sql)

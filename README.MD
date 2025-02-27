@@ -16,13 +16,14 @@ To run this application, the following requirements must be met:
 - Download or clone this repository using `git clone https://github.com/Ta-ma/prop-filter-app.git`
 - You can run the `./start_db.sh` script to start a Docker container with a Postgres database. 
   - This container will be listening for incoming connections on the port `8080`.
-  - The default configuration file in this repo has the credentials and default configuration to connect to it.
+  - The default configuration file in this repository has the credentials and default configuration to connect to it.
 - Change the default values `config.json` if needed (see the **Configuration** section).
-- Open a terminal in the repository folder and run `go run main.go query`
+- Open a terminal in the repository folder
+- Run `go run main.go query`
   - Alternatively, you can install the application by running `go install`
   - Now you can run it from any terminal: `filter-prop-app query`
-- If the table is not rendering properly, make sure the terminal window height and width so that it looks like the attached .gif. 
-- If it still doesn't work properly you can try using the old render (see the **Configuration** section).
+- If the table is not rendering properly, change the terminal window height and width so that it looks like the attached .gif. 
+- If it still doesn't work properly, you can try using the old render (see the **Configuration** section).
 
 ## Usage
 
@@ -130,9 +131,16 @@ The configuration parameters are read from a `config.json` file located in the s
 - `TrimLength`: (only if UseOldRender is true) The values in columns `Description` and `Ammenities` will be trimmed if they exceed the length specified by this value. If 0, the values won't be trimmed.
 - `UseOldRender`: Renders the table using Go's TableWriter instead of BubbleTea. This version is more limited in features but might be useful if the terminal is not able to work properly with BubbleTea.
 
-### Tools and dependencies
+## Potential improvements
 
-These have been vital in order for me to make this application. Big thank you to the authors of these for providing them as open source!
+- More unit tests would be desirable, only the package `filter` has unit tests.
+- Some files and functions could be split to improve readability and separation of concerns.
+- Read the configuration from a `.env` file or the environment instead of reading it from a `.json` file.
+- Add operators to allow more complex conditional expressions. (For example: OR conditions)
+
+## Tools and dependencies
+
+These have been vital in order for me to make this application. Big thanks to the authors of these for providing them as open source!
 
 - [PostgreSQL](https://www.postgresql.org/)
 - [Cobra](https://github.com/spf13/cobra)
