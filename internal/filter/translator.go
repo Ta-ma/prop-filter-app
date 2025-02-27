@@ -26,6 +26,33 @@ type filterExpr struct {
 	Value    string
 }
 
+type Translator struct {
+	Translations []string
+	Err          error
+}
+
+func (translator *Translator) Init() {
+	translator.Translations = make([]string, 0)
+	translator.Err = nil
+}
+
+func (translator *Translator) Translate(field string, expr string, exprType ExprType) {
+	if translator.Err != nil || field == "" || expr == "" {
+		return
+	}
+
+	var t string
+	t, translator.Err = TranslateToSql(field, expr, exprType)
+	if translator.Err != nil {
+		return
+	}
+	translator.Translations = append(translator.Translations, t)
+}
+
+func (translator *Translator) GetSqlTranslation() string {
+	return strings.Join(translator.Translations, " and ")
+}
+
 func TranslateToSql(field string, expr string, exprType ExprType) (string, error) {
 	var sqlCondition string
 	var err error

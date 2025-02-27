@@ -6,13 +6,12 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/eiannone/keyboard"
 	"github.com/spf13/cobra"
 	"github.com/ta-ma/prop-filter-app/internal/db"
-	"github.com/ta-ma/prop-filter-app/internal/models"
+	"github.com/ta-ma/prop-filter-app/internal/filter"
 )
 
 var queryCmd = &cobra.Command{
@@ -22,13 +21,38 @@ var queryCmd = &cobra.Command{
 The resulting filtered data will be printed in a table, limited by the max amount of entries
 per page.
 
-Example: prop-filter-app query -p 10 -n 2`,
+Example: prop-filter-app query -w 10 -n 2`,
 	Run: func(cmd *cobra.Command, args []string) {
-		filterExpr, _ := cmd.Flags().GetString("filter")
-
-		pageSize, _ := cmd.Flags().GetInt("page-size")
+		pageHeight, _ := cmd.Flags().GetInt("page-size")
 		pageNumber, _ := cmd.Flags().GetInt("page")
-		propsCount, err := db.GetPropertiesCount(filterExpr)
+		priceExpr, _ := cmd.Flags().GetString("price")
+		roomsExpr, _ := cmd.Flags().GetString("rooms")
+		bathroomsExpr, _ := cmd.Flags().GetString("bathrooms")
+		latitudeExpr, _ := cmd.Flags().GetString("latitude")
+		longitudeExpr, _ := cmd.Flags().GetString("longitude")
+		sqftExpr, _ := cmd.Flags().GetString("sqft")
+		descExpr, _ := cmd.Flags().GetString("description")
+		ammenitiesExpr, _ := cmd.Flags().GetString("ammenities")
+		lightingExpr, _ := cmd.Flags().GetString("lighting")
+
+		translator := filter.Translator{}
+		translator.Init()
+		translator.Translate("p.price", priceExpr, filter.Num)
+		translator.Translate("p.rooms", roomsExpr, filter.Num)
+		translator.Translate("p.bathrooms", bathroomsExpr, filter.Num)
+		translator.Translate("p.latitude", latitudeExpr, filter.Num)
+		translator.Translate("p.longitude", longitudeExpr, filter.Num)
+		translator.Translate("p.square_footage", sqftExpr, filter.Num)
+		translator.Translate("p.description", descExpr, filter.Str)
+		translator.Translate("l.description", lightingExpr, filter.Lighting)
+		translator.Translate("a.description", ammenitiesExpr, filter.Ammenity)
+		if translator.Err != nil {
+			fmt.Println("Failed to parse filter parameters:", translator.Err)
+			return
+		}
+		sqlFilter := translator.GetSqlTranslation()
+
+		propsCount, err := db.GetPropertiesCount(sqlFilter)
 		if err != nil {
 			fmt.Println("Properties could not be counted:", err)
 			return
@@ -39,13 +63,13 @@ Example: prop-filter-app query -p 10 -n 2`,
 			return
 		}
 
-		if pageSize < 1 {
+		if pageHeight < 1 {
 			fmt.Println("ERROR: Page size parameter should be 1 or greater.")
 			return
 		}
 
-		maxPage := propsCount / pageSize
-		if propsCount%pageSize > 0 {
+		maxPage := propsCount / pageHeight
+		if propsCount%pageHeight > 0 {
 			maxPage++
 		}
 
@@ -54,39 +78,41 @@ Example: prop-filter-app query -p 10 -n 2`,
 			return
 		}
 
-		startLoop(pageNumber, pageSize, maxPage, filterExpr)
+		startLoop(pageNumber, pageHeight, maxPage, sqlFilter)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(queryCmd)
 
-	queryCmd.Flags().IntP("page-size", "p", 20, "page size, value of 0 will retrieve all filtered entries")
+	queryCmd.Flags().IntP("page-size", "w", 20, "page size, amount of entries listed in each page")
 	queryCmd.Flags().IntP("page", "n", 1, "page number, will display entries of that specified page, amount of pages depends on page-size")
-	queryCmd.Flags().StringP("filter", "f", "", "conditional SQL expression which will be used to filter queried properties")
+	queryCmd.Flags().StringP("price", "p", "", "Expression to filter entries by the Price field")
+	queryCmd.Flags().StringP("rooms", "r", "", "Expression to filter entries by the Rooms field")
+	queryCmd.Flags().StringP("bathrooms", "b", "", "Expression to filter entries by the Bathrooms field")
+	queryCmd.Flags().StringP("latitude", "x", "", "Expression to filter entries by the Latitude field")
+	queryCmd.Flags().StringP("longitude", "y", "", "Expression to filter entries by the Longitude field")
+	queryCmd.Flags().StringP("sqft", "s", "", "Expression to filter entries by the Square ft field")
+	queryCmd.Flags().StringP("description", "d", "", "Expression to filter entries by the Description field")
+	queryCmd.Flags().StringP("ammenities", "a", "", "Expression to filter entries by the Ammenities field")
+	queryCmd.Flags().StringP("lighting", "l", "", "Expression to filter entries by the Lighting field")
 }
 
-func printTable(props []models.Property) {
+func printTable(result []db.QueryResult) {
 	tw := tabwriter.NewWriter(os.Stdout, 1, 1, 2, ' ', 0)
-	fmt.Fprintf(tw, "Description\tPrice\tSquare Footage\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
+	fmt.Fprintf(tw, "Description\tPrice\tSquare ft\tRooms\tBathrooms\tLighting\tLocation\tAmmenities\n")
 	fmt.Fprintf(tw, "-----\t-----\t-----\t-----\t-----\t-----\t-----\t-----\t\n")
 
-	for _, p := range props {
-		ammenities := ""
-		for _, a := range p.Ammenities {
-			ammenities += a.Description + ", "
-		}
-		ammenities = strings.TrimSuffix(ammenities, ", ")
-
-		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(p.Description),
-			p.Price, p.SquareFootage, p.Rooms, p.Bathrooms, p.Lighting.Description, p.Latitude,
-			p.Longitude, trimString(ammenities))
+	for _, r := range result {
+		fmt.Fprintf(tw, "%s\t%.2f\t%.2f\t%d\t%d\t%s\t(%.2f, %.2f)\t%s\n", trimString(r.Description),
+			r.Price, r.Square_footage, r.Rooms, r.Bathrooms, r.Lighting, r.Latitude,
+			r.Longitude, r.Ammenities)
 	}
 
 	tw.Flush()
 }
 
-func startLoop(startPageNumber int, pageSize int, maxPage int, filterExpr string) {
+func startLoop(startPageNumber int, pageHeight int, maxPage int, queryFilter string) {
 	pageNumber := startPageNumber
 	invalidKeyPressed := false
 
@@ -99,7 +125,7 @@ func startLoop(startPageNumber int, pageSize int, maxPage int, filterExpr string
 
 	for {
 		if !invalidKeyPressed {
-			properties, err := db.QueryProperties(filterExpr, pageSize, (pageNumber-1)*pageSize)
+			properties, err := db.QueryProperties(queryFilter, pageHeight, (pageNumber-1)*pageHeight)
 			if err != nil {
 				fmt.Println("Properties could not be queried:", err)
 				return

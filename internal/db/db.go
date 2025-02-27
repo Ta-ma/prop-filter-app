@@ -4,13 +4,24 @@ import (
 	"fmt"
 
 	"github.com/ta-ma/prop-filter-app/internal/config"
-	"github.com/ta-ma/prop-filter-app/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
+
+type QueryResult struct {
+	Description    string
+	Price          float32
+	Square_footage float32
+	Rooms          uint
+	Bathrooms      uint
+	Latitude       float64
+	Longitude      float64
+	Lighting       string
+	Ammenities     string
+}
 
 func Initialize(dbConfig *config.DbConfig) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
@@ -30,30 +41,45 @@ func Initialize(dbConfig *config.DbConfig) {
 	}
 }
 
-func QueryProperties(selector string, limit int, offset int) ([]models.Property, error) {
-	var properties []models.Property
+func QueryProperties(queryFilter string, limit int, offset int) ([]QueryResult, error) {
 	if db == nil {
-		return properties, fmt.Errorf("database connection has not been initialized")
+		return []QueryResult{}, fmt.Errorf("database connection has not been initialized")
 	}
 
+	var queryResult []QueryResult
 	err := db.
-		Preload("Lighting").
-		Preload("Ammenities").
-		Where(selector).
+		Table("properties as p").
+		Select("p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude, l.description as lighting, STRING_AGG(a.description, ',') ammenities").
+		Joins("join lightings l on p.lighting_id = l.id").
+		Joins("left join properties_ammenities pa on p.id = pa.property_id").
+		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Group("p.id, l.description").
+		Where(queryFilter).
 		Limit(limit).
 		Offset(offset).
-		Find(&properties).
+		Scan(&queryResult).
 		Error
 
 	if err != nil {
-		return properties, err
+		return []QueryResult{}, err
 	}
-	return properties, nil
+
+	return queryResult, nil
 }
 
-func GetPropertiesCount(selector string) (int, error) {
+func GetPropertiesCount(queryFilter string) (int, error) {
 	var count int64
-	err := db.Model(&models.Property{}).Where(selector).Count(&count).Error
+	err := db.
+		Table("properties as p").
+		Select("p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude, l.description as lighting, STRING_AGG(a.description, ',')").
+		Joins("join lightings l on p.lighting_id = l.id").
+		Joins("left join properties_ammenities pa on p.id = pa.property_id").
+		Joins("left join ammenities a on a.id = pa.ammenity_id").
+		Group("p.id, l.description").
+		Where(queryFilter).
+		Count(&count).
+		Error
+
 	if err != nil {
 		return int(count), err
 	}
