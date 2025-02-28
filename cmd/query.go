@@ -48,7 +48,7 @@ Example: prop-filter-app query -w 10 -n 2 -p "<700000"`,
 		translator.Translate("p.square_footage", sqftExpr, filter.Num)
 		translator.Translate("p.description", descExpr, filter.Str)
 		translator.Translate("l.description", lightingExpr, filter.Lighting)
-		translator.Translate("a.description", amenitiesExpr, filter.Amenity)
+		translator.Translate("a.amenities", amenitiesExpr, filter.Amenity)
 
 		var calcDistance bool
 		var distanceData filter.DistanceFilterData

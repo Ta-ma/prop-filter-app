@@ -74,31 +74,46 @@ func GetPropertiesCount(queryFilter string, calcDist bool, distX string, distY s
 func getStandardQuery(queryFilter string) *gorm.DB {
 	selectStatement :=
 		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
-			"l.description as lighting, STRING_AGG(a.description, ',') amenities"
+			"l.description as lighting, a.amenities"
+
+	amenitiesStatement :=
+		"join (" +
+			"select p.id, STRING_AGG(a.description, ', ') amenities from properties p " +
+			"left join properties_amenities pa on p.id = pa.property_id " +
+			"join amenities a on pa.amenity_id = a.id " +
+			"group by p.id " +
+			") a on p.id = a.id"
 
 	return db.Table("properties as p").
 		Select(selectStatement).
 		Joins("join lightings l on p.lighting_id = l.id").
-		Joins("left join properties_amenities pa on p.id = pa.property_id").
-		Joins("left join amenities a on a.id = pa.amenity_id").
-		Group("p.id, l.description").
+		Joins(amenitiesStatement).
 		Where(queryFilter)
 }
 
 func getDistanceQuery(queryFilter string, distX string, distY string) *gorm.DB {
 	selectStatement :=
 		"p.description, p.price, p.square_footage, p.rooms, p.bathrooms, p.latitude, p.longitude," +
-			"l.description as lighting, STRING_AGG(a.description, ',') amenities, d.dist"
+			"l.description as lighting, a.amenities, d.dist"
+
+	amenitiesStatement :=
+		"join (" +
+			"select p.id, STRING_AGG(a.description, ', ') amenities from properties p " +
+			"left join properties_amenities pa on p.id = pa.property_id " +
+			"join amenities a on pa.amenity_id = a.id " +
+			"group by p.id " +
+			") a on p.id = a.id"
 
 	distStatement :=
-		fmt.Sprintf("join (select id, fn_spheric_distance(%s, %s, latitude, longitude) as dist from properties) d on p.id = d.id", distX, distY)
+		fmt.Sprintf(
+			"join (select id, fn_spheric_distance(%s, %s, latitude, longitude) as dist from properties) d on p.id = d.id",
+			distX, distY,
+		)
 
 	return db.Table("properties as p").
 		Select(selectStatement).
 		Joins("join lightings l on p.lighting_id = l.id").
 		Joins(distStatement).
-		Joins("left join properties_amenities pa on p.id = pa.property_id").
-		Joins("left join amenities a on a.id = pa.amenity_id").
-		Group("p.id, l.description, d.dist").
+		Joins(amenitiesStatement).
 		Where(queryFilter)
 }

@@ -139,6 +139,7 @@ The configuration parameters are read from a `config.json` file located in the s
 - Some files and functions could be split to improve readability and separation of concerns.
 - Read the configuration from a `.env` file or the environment instead of reading it from a `.json` file.
 - Add operators to allow more complex conditional expressions. (For example: OR conditions)
+- Allow chaining operators on distance function.
 
 ## Tools and dependencies
 

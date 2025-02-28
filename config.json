@@ -5,7 +5,7 @@
 		"PgUser": "dbadmin",
 		"PgPassword": "filterpr0p",
 		"DbName": "filter-prop",
-		"SeedDatabase": true,
+		"SeedDatabase": false,
 		"SeedEntries": 10000
 	},
 	"Cli": {
